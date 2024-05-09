@@ -53,17 +53,26 @@ func main() {
 	userController := controller.NewUserController(userRepo)
 	commentController := controller.NewCommentController(commentRepo)
 
-	// Setup routes
+	// Main router
 	r := mux.NewRouter()
-	r.HandleFunc("/posts", postController.GetPosts).Methods("GET")
-	r.HandleFunc("/posts", postController.CreatePost).Methods("POST")
-	r.HandleFunc("/users", userController.GetUsers).Methods("GET")
-	r.HandleFunc("/users", userController.CreateUser).Methods("POST")
-	r.HandleFunc("/comments", commentController.GetCommentsByPost).Methods("GET")
-	r.HandleFunc("/comments", commentController.CreateComment).Methods("POST")
 
-	// Apply middleware
-	r.Use(middleware.AuthMiddleware)
+	// Subrouter for authenticated routes
+	authRoutes := r.PathPrefix("/api").Subrouter()
+	authRoutes.Use(middleware.AuthMiddleware)  // Apply middleware to all routes in this subrouter
+
+	// Public routes
+	r.HandleFunc("/login", userController.Login).Methods("POST")
+	r.HandleFunc("/register", userController.Register).Methods("POST")  // For user registration with JWT token
+
+	// Authenticated routes
+	authRoutes.HandleFunc("/posts", postController.GetPosts).Methods("GET")
+	authRoutes.HandleFunc("/posts", postController.CreatePost).Methods("POST") // For creating a user without JWT (admin usage)
+	authRoutes.HandleFunc("/users", userController.GetUsers).Methods("GET")
+	authRoutes.HandleFunc("/users", userController.CreateUser).Methods("POST")
+	authRoutes.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")
+	authRoutes.HandleFunc("/comments", commentController.GetCommentsByPost).Methods("GET")
+	authRoutes.HandleFunc("/comments", commentController.CreateComment).Methods("POST")
+	
 
 	// Start server
 	log.Println("Starting server on port 8080")

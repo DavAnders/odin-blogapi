@@ -7,6 +7,8 @@ import (
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"github.com/DavAnders/odin-blogapi/internal/repository"
+	"github.com/DavAnders/odin-blogapi/pkg/jwt"
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,6 +21,32 @@ func NewUserController(repo repository.UserRepository) *UserController {
 		repo: repo,
 	}
 }
+
+// Create user with JWT token
+func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
+    var user model.User
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    // Create user in the database
+    if err := c.repo.CreateUser(r.Context(), user); err != nil {
+        http.Error(w, "Failed to create user", http.StatusInternalServerError)
+        return
+    }
+
+    // Generate a JWT for the user after registration
+    token, err := jwt.GenerateToken(user.Username)
+    if err != nil {
+        http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
+
 
 // Handles POST requests to create a new user
 func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +68,8 @@ func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 // Handles GET requests to retrieve a single user
 func (c *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("id")  // May change
+	vars := mux.Vars(r)
+	userID := vars["id"]
 	if userID == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
