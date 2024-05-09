@@ -13,4 +13,5 @@ type User struct {
 	HashedPassword string `bson:"hashedPassword" json:"-"`
 	Email string `bson:"email" json:"email" binding:"required"`
 	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
+	Author bool `bson:"author" json:"author"`
 }
