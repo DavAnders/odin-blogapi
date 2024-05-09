@@ -44,9 +44,9 @@ func main() {
 	log.Println("Connected to MongoDB")
 
 	// Initialize repositories
-	postRepo := repository.NewPostRepository(client.Database("yourDatabaseName"))
-	userRepo := repository.NewUserRepository(client.Database("yourDatabaseName"))
-	commentRepo := repository.NewCommentRepository(client.Database("yourDatabaseName"))
+	postRepo := repository.NewPostRepository(client.Database("blog"))
+	userRepo := repository.NewUserRepository(client.Database("blog"))
+	commentRepo := repository.NewCommentRepository(client.Database("blog"))
 
 	// Initialize controllers
 	postController := controller.NewPostController(postRepo)

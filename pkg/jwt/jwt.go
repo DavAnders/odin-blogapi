@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"log"
 	"os"
 	"time"
 
@@ -14,8 +15,17 @@ type Claims struct {
     jwt.StandardClaims
 }
 
+func getJWTKey() []byte {
+    secretKey := os.Getenv("SECRET_KEY")
+    if secretKey == "" {
+        log.Fatal("SECRET_KEY is not set or is empty")
+    }
+    return []byte(secretKey)
+}
+
 // Generates a new JWT token
 func GenerateToken(username string) (string, error) {
+    jwtKey := getJWTKey()
     expirationTime := time.Now().Add(1 * time.Hour) // Token expires after 1 hour
     claims := &Claims{
         Username: username,
@@ -26,7 +36,6 @@ func GenerateToken(username string) (string, error) {
 
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     tokenString, err := token.SignedString(jwtKey)
-
     return tokenString, err
 }
 
@@ -38,5 +47,14 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
         return jwtKey, nil
     })
 
-    return token, err
+    if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+        log.Printf("User %s logged in", claims.Username)
+    } else {
+        log.Printf("Invalid token: %v", err)
+        return nil, err
+    }
+
+    return token, nil
 }
+
+

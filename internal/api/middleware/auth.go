@@ -34,12 +34,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			http.Error(w, "Invalid Token", http.StatusUnauthorized)
+			http.Error(w, fmt.Sprintf("Invalid Token: %v", err), http.StatusUnauthorized)
 			return
 		}
 
 		if !token.Valid {
-			http.Error(w, "Invalid Token", http.StatusUnauthorized)
+			http.Error(w, fmt.Sprintf("Invalid Token: %v", err), http.StatusUnauthorized)
 			return
 		}
 

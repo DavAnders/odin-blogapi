@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,7 +42,7 @@ func (r *userRepository) CreateUser(ctx context.Context, user model.User) error 
 	if user.Password == "" {
 		return fmt.Errorf("password is required")
 	}
-	
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -49,7 +50,11 @@ func (r *userRepository) CreateUser(ctx context.Context, user model.User) error 
 	}
 	user.HashedPassword = string(hashedPassword)
 	user.Password = "" // Clear the plain password
-	user.ID = primitive.NewObjectID() // Ensure an ObjectID is generated
+	user.CreatedAt = time.Now()
+
+	if user.ID.IsZero() {
+        user.ID = primitive.NewObjectID()
+    }
 
 	result, err := r.db.InsertOne(ctx, user)
 	if err != nil {
