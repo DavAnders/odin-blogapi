@@ -8,6 +8,7 @@ import (
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"github.com/DavAnders/odin-blogapi/internal/repository"
+	"github.com/gorilla/mux"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -51,4 +52,23 @@ func (c *PostController) GetPosts(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(posts)
+}
+
+// Handles GET requests to retrieve a post by ID
+func (c *PostController) GetPostByID(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    postID := vars["id"]
+    if postID == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
+
+    post, err := c.repo.GetPostByID(context.Background(), postID)
+    if err != nil {
+        http.Error(w, "Failed to retrieve post", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(post)
 }

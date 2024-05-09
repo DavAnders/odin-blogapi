@@ -5,6 +5,7 @@ import (
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -12,6 +13,7 @@ import (
 type PostRepository interface {
 	CreatePost(ctx context.Context, post model.Post) error
 	GetPosts(ctx context.Context) ([]model.Post, error)
+	GetPostByID(ctx context.Context, id string) (*model.Post, error)
 }
 
 type postRepository struct {
@@ -51,3 +53,14 @@ func (r *postRepository) GetPosts(ctx context.Context) ([]model.Post, error) {
     return posts, nil
 }
 
+func (r *postRepository) GetPostByID(ctx context.Context, id string) (*model.Post, error) {
+    var post model.Post
+    objID, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return nil, err  // If the ID is not a valid ObjectId
+    }
+    if err := r.db.FindOne(ctx, bson.M{"_id": objID}).Decode(&post); err != nil {
+        return nil, err
+    }
+    return &post, nil
+}
