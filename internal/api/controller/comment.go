@@ -7,6 +7,7 @@ import (
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"github.com/DavAnders/odin-blogapi/internal/repository"
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -40,7 +41,8 @@ func (c *CommentController) CreateComment(w http.ResponseWriter, r *http.Request
 
 // Handles GET requests to retrieve all comments for a post
 func (c *CommentController) GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
-	postID := r.URL.Query().Get("postId")
+	vars := mux.Vars(r)
+    postID := vars["id"]
 	if postID == "" {
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
 		return
