@@ -3,13 +3,14 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"github.com/DavAnders/odin-blogapi/internal/repository"
 	"github.com/DavAnders/odin-blogapi/pkg/jwt"
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserController struct {
@@ -32,6 +33,7 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 
     // Create user in the database
     if err := c.repo.CreateUser(r.Context(), user); err != nil {
+		log.Printf("Failed to create user: %v", err)
         http.Error(w, "Failed to create user", http.StatusInternalServerError)
         return
     }
@@ -50,20 +52,20 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 
 // Handles POST requests to create a new user
 func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user model.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid user data", http.StatusBadRequest)
-		return
-	}
-	user.ID = primitive.NewObjectID()  // Assuming MongoDB's ObjectIDs are used
+    var user model.User
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        http.Error(w, fmt.Sprintf("Invalid user data: %v", err), http.StatusBadRequest)
+        return
+    }
 
-	if err := c.repo.CreateUser(context.Background(), user); err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
-		return
-	}
+    if err := c.repo.CreateUser(context.Background(), user); err != nil {
+        log.Printf("Failed to create user: %v", err)  
+        http.Error(w, fmt.Sprintf("Failed to create user: %v", err), http.StatusInternalServerError)
+        return
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(user)
 }
 
 // Handles GET requests to retrieve a single user

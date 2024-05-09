@@ -72,7 +72,6 @@ func main() {
 	authRoutes.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")
 	authRoutes.HandleFunc("/comments", commentController.GetCommentsByPost).Methods("GET")
 	authRoutes.HandleFunc("/comments", commentController.CreateComment).Methods("POST")
-	
 
 	// Start server
 	log.Println("Starting server on port 8080")

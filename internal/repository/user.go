@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -30,17 +32,35 @@ func NewUserRepository(db *mongo.Database) UserRepository {
 
 // Inserts a new user into the database
 func (r *userRepository) CreateUser(ctx context.Context, user model.User) error {
+	if user.Email == "" {
+        return fmt.Errorf("email is required")
+    }
+    if user.Username == "" {
+        return fmt.Errorf("username is required")
+    }
+	if user.Password == "" {
+		return fmt.Errorf("password is required")
+	}
+	
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Printf("Error hashing password: %v", err)
 		return err
 	}
 	user.HashedPassword = string(hashedPassword)
 	user.Password = "" // Clear the plain password
 	user.ID = primitive.NewObjectID() // Ensure an ObjectID is generated
 
-	_, err = r.db.InsertOne(ctx, user)
-	return err
+	result, err := r.db.InsertOne(ctx, user)
+	if err != nil {
+		log.Printf("Error inserting user into database: %v", err)
+		return err
+	}
+	log.Printf("Inserted user with ID: %v", result.InsertedID)
+	
+	return nil
 }
+
 
 // Returns a single user from the database
 func (r *userRepository) GetUser(ctx context.Context, id string) (*model.User, error) {
