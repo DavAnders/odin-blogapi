@@ -75,6 +75,7 @@ func main() {
 	authRoutes.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")
 	authRoutes.HandleFunc("/comments/{id}", commentController.GetCommentsByPost).Methods("GET")
 	authRoutes.HandleFunc("/comments/{id}", commentController.UpdateComment).Methods("PUT")
+	authRoutes.HandleFunc("/comments/{id}", commentController.DeleteComment).Methods("DELETE")
 	authRoutes.HandleFunc("/comments", commentController.CreateComment).Methods("POST")
 
 	// Start server

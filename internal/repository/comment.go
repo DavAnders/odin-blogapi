@@ -15,6 +15,7 @@ type CommentRepository interface {
 	CreateComment(ctx context.Context, comment model.Comment) error
 	GetCommentsByPost(ctx context.Context, postID string) ([]model.Comment, error)
 	UpdateComment(ctx context.Context, id string, userID string, comment model.Comment) error
+	DeleteComment(ctx context.Context, id string, userID string) error
 }
 
 type commentRepository struct {
@@ -76,3 +77,19 @@ func (r *commentRepository) UpdateComment(ctx context.Context, id string, userID
     return nil
 }
 
+func (r *commentRepository) DeleteComment(ctx context.Context, id string, userID string) error {
+    objID, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return err  // If the ID is not a valid ObjectId
+    }
+
+    filter := bson.M{"_id": objID, "author": userID} // Ensure that the author matches the userID
+    result, err := r.db.DeleteOne(ctx, filter)
+    if err != nil {
+        return err
+    }
+    if result.DeletedCount == 0 {
+        return fmt.Errorf("no comment found with given ID or unauthorized")
+    }
+    return nil
+}
