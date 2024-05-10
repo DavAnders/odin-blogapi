@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,6 +16,7 @@ type PostRepository interface {
 	CreatePost(ctx context.Context, post model.Post) error
 	GetPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id string) (*model.Post, error)
+	UpdatePost(ctx context.Context, id string, post model.Post) error
 }
 
 type postRepository struct {
@@ -63,4 +66,28 @@ func (r *postRepository) GetPostByID(ctx context.Context, id string) (*model.Pos
         return nil, err
     }
     return &post, nil
+}
+
+func (r *postRepository) UpdatePost(ctx context.Context, id string, post model.Post) error {
+    objID, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return err  // If the ID is not a valid ObjectId
+    }
+    update := bson.M{
+        "$set": bson.M{
+            "title": post.Title,
+            "content": post.Content,
+            "published": post.Published,
+            "updatedAt": time.Now(),
+        },
+    }
+    filter := bson.M{"_id": objID}
+    result, err := r.db.UpdateOne(ctx, filter, update)
+    if err != nil {
+        return err
+    }
+    if result.MatchedCount == 0 {
+		return fmt.Errorf("no post found with given ID")
+    }
+    return nil
 }

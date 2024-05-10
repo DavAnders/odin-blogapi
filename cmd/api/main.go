@@ -68,6 +68,7 @@ func main() {
 	authRoutes.HandleFunc("/posts", postController.GetPosts).Methods("GET")
 	authRoutes.HandleFunc("/posts", postController.CreatePost).Methods("POST") 
 	authRoutes.HandleFunc("/posts/{id}", postController.GetPostByID).Methods("GET")
+	authRoutes.HandleFunc("/posts/{id}", postController.UpdatePost).Methods("PUT")
 	authRoutes.HandleFunc("/users", userController.GetUsers).Methods("GET")
 	authRoutes.HandleFunc("/users", userController.CreateUser).Methods("POST") // For creating a user without JWT (admin usage)
 	authRoutes.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")

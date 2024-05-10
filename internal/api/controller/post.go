@@ -72,3 +72,28 @@ func (c *PostController) GetPostByID(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(post)
 }
+
+// Handles PUT requests to update a post
+func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    postID := vars["id"]
+    if postID == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
+
+    var post model.Post
+    if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    if err := c.repo.UpdatePost(context.Background(), postID, post); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK) // Explicitly signify a successful update
+    json.NewEncoder(w).Encode(post)
+}
