@@ -97,3 +97,33 @@ func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusOK) // Explicitly signify a successful update
     json.NewEncoder(w).Encode(post)
 }
+
+// Handles DELETE requests to delete a post
+func (c *PostController) DeletePost(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    postID := vars["id"]
+    userID := r.Context().Value("userID").(string) // Get user ID from context, cast to string
+
+    post, err := c.repo.GetPostByID(context.Background(), postID)
+    if err != nil {
+        http.Error(w, "Failed to retrieve post", http.StatusInternalServerError)
+        return
+    }
+    if post == nil {
+        http.Error(w, "Post not found", http.StatusNotFound)
+        return
+    }
+
+    if post.AuthorID.Hex() != userID {
+        http.Error(w, "Unauthorized to delete this post", http.StatusUnauthorized)
+        return
+    }
+
+    // Proceed to delete the post
+    if err := c.repo.DeletePost(context.Background(), postID); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusNoContent)
+}

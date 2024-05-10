@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/DavAnders/odin-blogapi/internal/model"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -12,6 +13,7 @@ var jwtKey = []byte(os.Getenv("SECRET_KEY"))
 
 type Claims struct {
     Username string `json:"username"`
+	UserID string `json:"userId"`
     jwt.StandardClaims
 }
 
@@ -24,11 +26,12 @@ func getJWTKey() []byte {
 }
 
 // Generates a new JWT token
-func GenerateToken(username string) (string, error) {
+func GenerateToken(user model.User) (string, error) {
     jwtKey := getJWTKey()
     expirationTime := time.Now().Add(1 * time.Hour) // Token expires after 1 hour
     claims := &Claims{
-        Username: username,
+        Username: user.Username,
+		UserID: user.ID.Hex(), // Convert ObjectID to string
         StandardClaims: jwt.StandardClaims{
             ExpiresAt: expirationTime.Unix(),
         },

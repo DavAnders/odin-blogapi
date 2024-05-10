@@ -25,7 +25,7 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
     }
 
     // Generate JWT
-    token, err := jwt.GenerateToken(user.Username)
+    token, err := jwt.GenerateToken(*user)
     if err != nil {
         http.Error(w, "Failed to generate token", http.StatusInternalServerError)
         return

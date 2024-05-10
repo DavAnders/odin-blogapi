@@ -17,6 +17,7 @@ type PostRepository interface {
 	GetPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id string) (*model.Post, error)
 	UpdatePost(ctx context.Context, id string, post model.Post) error
+	DeletePost(ctx context.Context, id string) error
 }
 
 type postRepository struct {
@@ -56,6 +57,7 @@ func (r *postRepository) GetPosts(ctx context.Context) ([]model.Post, error) {
     return posts, nil
 }
 
+// Find a post by its ID
 func (r *postRepository) GetPostByID(ctx context.Context, id string) (*model.Post, error) {
     var post model.Post
     objID, err := primitive.ObjectIDFromHex(id)
@@ -68,6 +70,7 @@ func (r *postRepository) GetPostByID(ctx context.Context, id string) (*model.Pos
     return &post, nil
 }
 
+// Updates a post in the database
 func (r *postRepository) UpdatePost(ctx context.Context, id string, post model.Post) error {
     objID, err := primitive.ObjectIDFromHex(id)
     if err != nil {
@@ -88,6 +91,23 @@ func (r *postRepository) UpdatePost(ctx context.Context, id string, post model.P
     }
     if result.MatchedCount == 0 {
 		return fmt.Errorf("no post found with given ID")
+    }
+    return nil
+}
+
+// Deletes a post from the database
+func (r *postRepository) DeletePost(ctx context.Context, id string) error {
+    objID, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return err  // If the ID is not a valid ObjectId
+    }
+    filter := bson.M{"_id": objID}
+    result, err := r.db.DeleteOne(ctx, filter)
+    if err != nil {
+        return err
+    }
+    if result.DeletedCount == 0 {
+        return fmt.Errorf("no post found with given ID")
     }
     return nil
 }
