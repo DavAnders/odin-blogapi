@@ -2,15 +2,19 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/DavAnders/odin-blogapi/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CommentRepository interface {
 	CreateComment(ctx context.Context, comment model.Comment) error
 	GetCommentsByPost(ctx context.Context, postID string) ([]model.Comment, error)
+	UpdateComment(ctx context.Context, id string, userID string, comment model.Comment) error
 }
 
 type commentRepository struct {
@@ -48,3 +52,27 @@ func (r *commentRepository) GetCommentsByPost(ctx context.Context, postID string
 	}
 	return comments, nil
 }
+
+func (r *commentRepository) UpdateComment(ctx context.Context, id string, userID string, comment model.Comment) error {
+    objID, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return err  // If the ID is not a valid ObjectId
+    }
+
+    update := bson.M{"$set": bson.M{
+        "content": comment.Content,
+        "email": comment.Email, // Assume you want to update the email too, handle conditionally if necessary
+        "updatedAt": time.Now(),
+    }}
+    filter := bson.M{"_id": objID, "author": userID} // Ensure that the author matches the userID
+
+    result, err := r.db.UpdateOne(ctx, filter, update)
+    if err != nil {
+        return err
+    }
+    if result.MatchedCount == 0 {
+        return fmt.Errorf("no comment found with given ID or unauthorized")
+    }
+    return nil
+}
+

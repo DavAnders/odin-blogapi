@@ -57,3 +57,34 @@ func (c *CommentController) GetCommentsByPost(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(comments)
 }
+
+func (c *CommentController) UpdateComment(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    commentID := vars["id"]
+    if commentID == "" {
+        http.Error(w, "Comment ID is required", http.StatusBadRequest)
+        return
+    }
+
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized or bad request", http.StatusUnauthorized)
+        return
+    }
+
+    var comment model.Comment
+    if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    // Update the comment directly with user authorization check in the repo layer
+    if err := c.repo.UpdateComment(context.Background(), commentID, userID, comment); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK) // Explicitly signify a successful update
+    json.NewEncoder(w).Encode(comment)
+}
