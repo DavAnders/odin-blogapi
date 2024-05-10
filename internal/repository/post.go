@@ -17,7 +17,7 @@ type PostRepository interface {
 	GetPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id string) (*model.Post, error)
 	UpdatePost(ctx context.Context, id string, post model.Post) error
-	DeletePost(ctx context.Context, id string) error
+	DeletePost(ctx context.Context, id string, userID *string) error
 }
 
 type postRepository struct {
@@ -96,18 +96,26 @@ func (r *postRepository) UpdatePost(ctx context.Context, id string, post model.P
 }
 
 // Deletes a post from the database
-func (r *postRepository) DeletePost(ctx context.Context, id string) error {
+func (r *postRepository) DeletePost(ctx context.Context, id string, userID *string) error {
     objID, err := primitive.ObjectIDFromHex(id)
     if err != nil {
         return err  // If the ID is not a valid ObjectId
     }
     filter := bson.M{"_id": objID}
+    if userID != nil {
+        filter["authorId"] = *userID  // Add author check only if userID is provided
+    }
+
     result, err := r.db.DeleteOne(ctx, filter)
     if err != nil {
         return err
     }
     if result.DeletedCount == 0 {
+        if userID != nil {
+            return fmt.Errorf("no post found with given ID or unauthorized")
+        }
         return fmt.Errorf("no post found with given ID")
     }
     return nil
 }
+

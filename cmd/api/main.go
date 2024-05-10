@@ -66,6 +66,10 @@ func main() {
 	adminRoutes := r.PathPrefix("/admin").Subrouter()
 	adminRoutes.Use(middleware.AuthMiddleware) // Ensures the user is authenticated
 	adminRoutes.Use(middleware.AdminMiddleware(*adminRepo)) // Ensures the user is an admin
+	
+	// Admin-specific routes for deleting posts and comments
+	adminRoutes.HandleFunc("/posts/{id}", postController.AdminDeletePost).Methods("DELETE")
+	adminRoutes.HandleFunc("/comments/{id}", commentController.AdminDeleteComment).Methods("DELETE")
 
 
 	// Public routes

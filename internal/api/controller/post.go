@@ -102,25 +102,33 @@ func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
 func (c *PostController) DeletePost(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     postID := vars["id"]
-    userID := r.Context().Value("userID").(string) // Get user ID from context, cast to string
-
-    post, err := c.repo.GetPostByID(context.Background(), postID)
-    if err != nil {
-        http.Error(w, "Failed to retrieve post", http.StatusInternalServerError)
-        return
-    }
-    if post == nil {
-        http.Error(w, "Post not found", http.StatusNotFound)
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok || postID == "" {
+        http.Error(w, "Unauthorized or bad request", http.StatusUnauthorized)
         return
     }
 
-    if post.AuthorID.Hex() != userID {
-        http.Error(w, "Unauthorized to delete this post", http.StatusUnauthorized)
+    // Pass userID for regular user deletes
+    if err := c.repo.DeletePost(context.Background(), postID, &userID); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
-    // Proceed to delete the post
-    if err := c.repo.DeletePost(context.Background(), postID); err != nil {
+    w.WriteHeader(http.StatusNoContent)
+}
+
+
+// Deletes a post by ID, only if the user is an admin
+func (c *PostController) AdminDeletePost(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    postID := vars["id"]
+    if postID == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
+
+    // Pass nil as userID for admin deletes
+    if err := c.repo.DeletePost(context.Background(), postID, nil); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
