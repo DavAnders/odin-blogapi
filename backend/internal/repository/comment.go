@@ -62,7 +62,7 @@ func (r *commentRepository) UpdateComment(ctx context.Context, id string, userID
 
     update := bson.M{"$set": bson.M{
         "content": comment.Content,
-        "email": comment.Email, // Assume you want to update the email too, handle conditionally if necessary
+        "email": comment.Email, // Updating email for now, but might want to change this
         "updatedAt": time.Now(),
     }}
     filter := bson.M{"_id": objID, "author": userID} // Ensure that the author matches the userID

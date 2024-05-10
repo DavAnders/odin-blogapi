@@ -7,7 +7,7 @@ import (
 
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -41,8 +41,7 @@ func (c *CommentController) CreateComment(w http.ResponseWriter, r *http.Request
 
 // Handles GET requests to retrieve all comments for a post
 func (c *CommentController) GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-    postID := vars["id"]
+    postID := chi.URLParam(r, "id")
 	if postID == "" {
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
 		return
@@ -60,8 +59,7 @@ func (c *CommentController) GetCommentsByPost(w http.ResponseWriter, r *http.Req
 
 // Handles PUT requests to update a comment
 func (c *CommentController) UpdateComment(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    commentID := vars["id"]
+    commentID := chi.URLParam(r, "id")
     if commentID == "" {
         http.Error(w, "Comment ID is required", http.StatusBadRequest)
         return
@@ -91,8 +89,7 @@ func (c *CommentController) UpdateComment(w http.ResponseWriter, r *http.Request
 
 // Handles DELETE requests to delete a comment
 func (c *CommentController) DeleteComment(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    commentID := vars["id"]
+    commentID := chi.URLParam(r, "id")
     if commentID == "" {
         http.Error(w, "Comment ID is required", http.StatusBadRequest)
         return
@@ -121,8 +118,7 @@ func (c *CommentController) DeleteComment(w http.ResponseWriter, r *http.Request
 
 // Deletes a comment by ID, only if the user is an admin
 func (c *CommentController) AdminDeleteComment(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    commentID := vars["id"]
+    commentID := chi.URLParam(r, "id")
     if commentID == "" {
         http.Error(w, "Comment ID is required", http.StatusBadRequest)
         return

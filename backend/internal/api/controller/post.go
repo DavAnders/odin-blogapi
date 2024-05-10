@@ -8,7 +8,7 @@ import (
 
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -56,8 +56,7 @@ func (c *PostController) GetPosts(w http.ResponseWriter, r *http.Request) {
 
 // Handles GET requests to retrieve a post by ID
 func (c *PostController) GetPostByID(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    postID := vars["id"]
+    postID := chi.URLParam(r, "id")
     if postID == "" {
         http.Error(w, "Post ID is required", http.StatusBadRequest)
         return
@@ -75,8 +74,7 @@ func (c *PostController) GetPostByID(w http.ResponseWriter, r *http.Request) {
 
 // Handles PUT requests to update a post
 func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    postID := vars["id"]
+    postID := chi.URLParam(r, "id")
     if postID == "" {
         http.Error(w, "Post ID is required", http.StatusBadRequest)
         return
@@ -100,8 +98,7 @@ func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 // Handles DELETE requests to delete a post
 func (c *PostController) DeletePost(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    postID := vars["id"]
+    postID := chi.URLParam(r, "id")
     userID, ok := r.Context().Value("userID").(string)
     if !ok || postID == "" {
         http.Error(w, "Unauthorized or bad request", http.StatusUnauthorized)
@@ -120,8 +117,7 @@ func (c *PostController) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 // Deletes a post by ID, only if the user is an admin
 func (c *PostController) AdminDeletePost(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    postID := vars["id"]
+    postID := chi.URLParam(r, "id")
     if postID == "" {
         http.Error(w, "Post ID is required", http.StatusBadRequest)
         return

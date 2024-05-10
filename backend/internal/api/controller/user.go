@@ -10,7 +10,7 @@ import (
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
 	"github.com/DavAnders/odin-blogapi/backend/pkg/jwt"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 type UserController struct {
@@ -70,8 +70,7 @@ func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 // Handles GET requests to retrieve a single user
 func (c *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID := vars["id"]
+	userID := chi.URLParam(r, "id")
 	if userID == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return

@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -53,42 +53,41 @@ func main() {
 	userController := controller.NewUserController(userRepo)
 	commentController := controller.NewCommentController(commentRepo)
 
-	// Main router
-	r := mux.NewRouter()
+	r := chi.NewRouter()
 
-	// Subrouter for authenticated routes
-	authRoutes := r.PathPrefix("/api").Subrouter()
-	authRoutes.Use(middleware.AuthMiddleware)  // Apply middleware to all routes in this subrouter
-
-	// Admin routes for wrapping the admin middleware
-	adminRepo := repository.NewAdminRepository(client.Database("blog"))
-
-	adminRoutes := r.PathPrefix("/admin").Subrouter()
-	adminRoutes.Use(middleware.AuthMiddleware) // Ensures the user is authenticated
-	adminRoutes.Use(middleware.AdminMiddleware(*adminRepo)) // Ensures the user is an admin
-	
-	// Admin-specific routes for deleting posts and comments
-	adminRoutes.HandleFunc("/posts/{id}", postController.AdminDeletePost).Methods("DELETE")
-	adminRoutes.HandleFunc("/comments/{id}", commentController.AdminDeleteComment).Methods("DELETE")
-
+	// Apply CORS middleware
+	r.Use(middleware.EnableCORS)
 
 	// Public routes
-	r.HandleFunc("/login", userController.Login).Methods("POST")
-	r.HandleFunc("/register", userController.Register).Methods("POST")  // For user registration with JWT token
+	r.Post("/login", userController.Login)
+	r.Post("/register", userController.Register)
 
-	// Authenticated routes
-	authRoutes.HandleFunc("/posts", postController.GetPosts).Methods("GET")
-	authRoutes.HandleFunc("/posts", postController.CreatePost).Methods("POST") 
-	authRoutes.HandleFunc("/posts/{id}", postController.GetPostByID).Methods("GET")
-	authRoutes.HandleFunc("/posts/{id}", postController.UpdatePost).Methods("PUT")
-	authRoutes.HandleFunc("/posts/{id}", postController.DeletePost).Methods("DELETE")
-	authRoutes.HandleFunc("/users", userController.GetUsers).Methods("GET")
-	authRoutes.HandleFunc("/users", userController.CreateUser).Methods("POST") // For creating a user without JWT (admin usage)
-	authRoutes.HandleFunc("/users/{id}", userController.GetUser).Methods("GET")
-	authRoutes.HandleFunc("/comments/{id}", commentController.GetCommentsByPost).Methods("GET")
-	authRoutes.HandleFunc("/comments/{id}", commentController.UpdateComment).Methods("PUT")
-	authRoutes.HandleFunc("/comments/{id}", commentController.DeleteComment).Methods("DELETE")
-	authRoutes.HandleFunc("/comments", commentController.CreateComment).Methods("POST")
+	// API routes
+	r.Route("/api", func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware) // Apply auth middleware to all '/api' routes
+
+		r.Get("/posts", postController.GetPosts)
+		r.Post("/posts", postController.CreatePost)
+		r.Get("/posts/{id}", postController.GetPostByID)
+		r.Put("/posts/{id}", postController.UpdatePost)
+		r.Delete("/posts/{id}", postController.DeletePost)
+
+		r.Get("/users", userController.GetUsers)
+		r.Post("/users", userController.CreateUser)
+		r.Get("/users/{id}", userController.GetUser)
+
+		r.Post("/comments", commentController.CreateComment)
+		r.Get("/comments/{id}", commentController.GetCommentsByPost)
+		r.Put("/comments/{id}", commentController.UpdateComment)
+		r.Delete("/comments/{id}", commentController.DeleteComment)
+
+		// Admin-specific routes under '/api/admin'
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(middleware.AdminMiddleware(*repository.NewAdminRepository(client.Database("blog")))) // Apply admin-specific middleware
+			r.Delete("/posts/{id}", postController.AdminDeletePost)
+			r.Delete("/comments/{id}", commentController.AdminDeleteComment)
+		})
+	})
 
 	// Start server
 	log.Println("Starting server on port 8080")
