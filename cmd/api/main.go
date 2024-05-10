@@ -60,6 +60,14 @@ func main() {
 	authRoutes := r.PathPrefix("/api").Subrouter()
 	authRoutes.Use(middleware.AuthMiddleware)  // Apply middleware to all routes in this subrouter
 
+	// Admin routes for wrapping the admin middleware
+	adminRepo := repository.NewAdminRepository(client.Database("blog"))
+
+	adminRoutes := r.PathPrefix("/admin").Subrouter()
+	adminRoutes.Use(middleware.AuthMiddleware) // Ensures the user is authenticated
+	adminRoutes.Use(middleware.AdminMiddleware(*adminRepo)) // Ensures the user is an admin
+
+
 	// Public routes
 	r.HandleFunc("/login", userController.Login).Methods("POST")
 	r.HandleFunc("/register", userController.Register).Methods("POST")  // For user registration with JWT token
