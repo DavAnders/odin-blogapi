@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function RegistrationForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async (event) => {
     event.preventDefault();
@@ -18,6 +20,8 @@ function RegistrationForm() {
       const data = await response.json();
       if (response.ok) {
         console.log("Registration Successful:", data);
+        localStorage.setItem("token", data.token); // Store the token in localStorage
+        navigate("/dashboard"); // Redirect to the dashboard
       } else {
         console.error("Registration Failed:", data);
       }

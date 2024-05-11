@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = async (event) => {
     event.preventDefault();
+    setError("");
     try {
       const response = await fetch(import.meta.env.VITE_API_URL + "/login", {
         method: "POST",
@@ -17,13 +21,14 @@ function LoginForm() {
       const data = await response.json();
       if (response.ok) {
         console.log("Login Successful:", data);
-        // Handle successful login (storing the token, redirecting the user)
+        localStorage.setItem("token", data.token);
+        navigate("/dashboard");
       } else {
-        console.error("Login Failed:", data);
-        // Handle errors (showing an error message to the user)
+        setError(data.message || "Login failed. Please try again."); // Backend error messages
       }
     } catch (error) {
       console.error("Error during login:", error);
+      setError("Network error, please try again later.");
     }
   };
 
@@ -46,6 +51,7 @@ function LoginForm() {
         />
       </label>
       <button type="submit">Login</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </form>
   );
 }
