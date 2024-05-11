@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/DavAnders/odin-blogapi/backend/pkg/jwt"
 )
@@ -31,6 +32,22 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Set security headers
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]string{"token": token})
+    w.Header().Set("Cache-Control", "no-store")
+    w.Header().Set("Pragma", "no-cache")
+
+    // Send token in HTTP-only cookie
+    http.SetCookie(w, &http.Cookie{
+        Name: "token",
+        Value: token,
+        Expires: time.Now().Add(1 * time.Hour),
+        HttpOnly: true,
+        Path: "/",
+        Secure: false, // For development purposes only
+        SameSite: http.SameSiteStrictMode,
+    })
+
+    // Send token in response body (alternative method)
+    // json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
