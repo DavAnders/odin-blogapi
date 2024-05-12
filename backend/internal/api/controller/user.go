@@ -31,22 +31,18 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Create user in the database
     if err := c.repo.CreateUser(r.Context(), user); err != nil {
-		log.Printf("Failed to create user: %v", err)
         http.Error(w, "Failed to create user", http.StatusInternalServerError)
         return
     }
 
-    // Generate a JWT for the user after registration
     token, err := jwt.GenerateToken(user)
     if err != nil {
         http.Error(w, "Failed to generate token", http.StatusInternalServerError)
         return
     }
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]string{"token": token})
+    setTokenAsCookie(w, token)
 }
 
 

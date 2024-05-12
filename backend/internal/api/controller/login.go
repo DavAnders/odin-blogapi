@@ -18,36 +18,30 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Validate user credentials (you need to implement this in your UserRepository)
     user, err := c.repo.ValidateCredentials(r.Context(), credentials.Username, credentials.Password)
     if err != nil {
         http.Error(w, "Invalid credentials", http.StatusUnauthorized)
         return
     }
 
-    // Generate JWT
     token, err := jwt.GenerateToken(*user)
     if err != nil {
         http.Error(w, "Failed to generate token", http.StatusInternalServerError)
         return
     }
 
-    // Set security headers
     w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Cache-Control", "no-store")
-    w.Header().Set("Pragma", "no-cache")
+    json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
 
-    // Send token in HTTP-only cookie
+func setTokenAsCookie(w http.ResponseWriter, tokenString string) {
     http.SetCookie(w, &http.Cookie{
-        Name: "token",
-        Value: token,
-        Expires: time.Now().Add(1 * time.Hour),
-        HttpOnly: true,
-        Path: "/",
-        Secure: false, // For development purposes only
+        Name:     "token",
+        Value:    tokenString,
+        Expires:  time.Now().Add(1 * time.Hour),
+        HttpOnly: true, // JavaScript can't access cookie
+        Path:     "/",  // Cookie available on all paths
+        Secure:   false, // For development purposes
         SameSite: http.SameSiteStrictMode,
     })
-
-    // Send token in response body (alternative method)
-    // json.NewEncoder(w).Encode(map[string]string{"token": token})
 }

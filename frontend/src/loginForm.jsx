@@ -18,13 +18,16 @@ function LoginForm() {
         },
         body: JSON.stringify({ username, password }),
       });
-      const data = await response.json();
+
       if (response.ok) {
+        const data = await response.json();
         console.log("Login Successful:", data);
         localStorage.setItem("token", data.token);
         navigate("/dashboard");
       } else {
-        setError(data.message || "Login failed. Please try again."); // Backend error messages
+        const errorData = await response.text();
+        console.error("Login Failed:", errorData);
+        throw new Error(`Login failed: ${errorData}`);
       }
     } catch (error) {
       console.error("Error during login:", error);

@@ -17,13 +17,13 @@ function RegistrationForm() {
         },
         body: JSON.stringify({ username, password, email }),
       });
-      const data = await response.json();
+
       if (response.ok) {
-        console.log("Registration Successful:", data);
-        localStorage.setItem("token", data.token); // Store the token in localStorage
-        navigate("/dashboard"); // Redirect to the dashboard
+        console.log("Registration Successful");
+        navigate("/dashboard"); // Redirect to the dashboard after successful registration
       } else {
-        console.error("Registration Failed:", data);
+        const errorData = await response.text(); // Text instead of json, don't need the token from response
+        console.error("Registration Failed:", errorData);
       }
     } catch (error) {
       console.error("Error during registration:", error);
