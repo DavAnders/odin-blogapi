@@ -15,7 +15,7 @@ import (
 // Interface for querying posts from db
 type PostRepository interface {
 	CreatePost(ctx context.Context, post *model.Post) error
-	GetPosts(ctx context.Context) ([]model.Post, error)
+	GetPosts(ctx context.Context, filter bson.M, limit int64, skip int64) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id string) (*model.Post, error)
 	UpdatePost(ctx context.Context, id string, post model.Post) error
 	DeletePost(ctx context.Context, id string, userID *string) error
@@ -43,10 +43,15 @@ func (r *postRepository) CreatePost(ctx context.Context, post *model.Post) error
     return nil
 }
 
-// FindAll returns all posts from the database
-func (r *postRepository) GetPosts(ctx context.Context) ([]model.Post, error) {
+// Returns posts from the database with optional filters, limit, and skip
+func (r *postRepository) GetPosts(ctx context.Context, filter bson.M, limit int64, skip int64) ([]model.Post, error) {
     var posts []model.Post
-    cur, err := r.db.Find(ctx, bson.M{})
+    opts := options.Find().
+        SetLimit(limit).
+        SetSkip(skip).
+        SetSort(bson.D{{Key: "publishedAt", Value: -1}}) // Use keyed fields
+
+    cur, err := r.db.Find(ctx, filter, opts)
     if err != nil {
         return nil, err
     }
@@ -63,6 +68,7 @@ func (r *postRepository) GetPosts(ctx context.Context) ([]model.Post, error) {
     }
     return posts, nil
 }
+
 
 // Find a post by its ID
 func (r *postRepository) GetPostByID(ctx context.Context, id string) (*model.Post, error) {

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Posts() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const formatDate = (dateString) => {
     const options = {
@@ -41,6 +43,10 @@ function Posts() {
 
   return (
     <div>
+      <div className="buttons">
+        <button onClick={() => navigate("/dashboard")}>Dashboard</button>
+        <button onClick={() => navigate("/create-post")}>Create Post</button>
+      </div>
       <h2>Posts</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <ul style={{ listStyle: "none", padding: 0 }}>

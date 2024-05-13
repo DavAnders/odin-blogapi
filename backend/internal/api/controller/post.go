@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/DavAnders/odin-blogapi/backend/internal/api/middleware"
@@ -11,6 +12,7 @@ import (
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
 	"github.com/go-chi/chi/v5"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -76,7 +78,18 @@ func (c *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 // Handles GET requests to retrieve all posts
 func (c *PostController) GetPosts(w http.ResponseWriter, r *http.Request) {
-    posts, err := c.repo.GetPosts(context.Background())
+    limit := int64(10) // Default limit
+    skip := int64(0)   // Default skip
+    limitQuery := r.URL.Query().Get("limit")
+    skipQuery := r.URL.Query().Get("skip")
+    if limitQuery != "" {
+        limit, _ = strconv.ParseInt(limitQuery, 10, 64)
+    }
+    if skipQuery != "" {
+        skip, _ = strconv.ParseInt(skipQuery, 10, 64)
+    }
+
+    posts, err := c.repo.GetPosts(context.Background(), bson.M{}, limit, skip)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -85,6 +98,7 @@ func (c *PostController) GetPosts(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(posts)
 }
+
 
 // Handles GET requests to retrieve a post by ID
 func (c *PostController) GetPostByID(w http.ResponseWriter, r *http.Request) {
