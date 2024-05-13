@@ -68,6 +68,8 @@ func main() {
 
 		r.Get("/posts", postController.GetPosts)
 		r.Post("/posts", postController.CreatePost)
+		r.Get("/posts/user/{userID}", postController.GetPostsByUser)
+		r.Post("/posts", postController.CreatePost)
 		r.Get("/posts/{id}", postController.GetPostByID)
 		r.Put("/posts/{id}", postController.UpdatePost)
 		r.Delete("/posts/{id}", postController.DeletePost)

@@ -104,6 +104,38 @@ func (c *PostController) GetPostByID(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(post)
 }
 
+// Handles GET requests to retrieve all posts by a user
+func (c *PostController) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
+    userID := chi.URLParam(r, "userID")
+    if userID == "" {
+        http.Error(w, "User ID is required", http.StatusBadRequest)
+        return
+    }
+
+    authUserID, ok := r.Context().Value(middleware.UserIDKey).(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    // Check if the requested userID matches the authenticated user's ID
+    if userID != authUserID {
+        http.Error(w, "Unauthorized - You can only view your own posts", http.StatusUnauthorized)
+        return
+    }
+
+    posts, err := c.repo.GetPostsByUser(context.Background(), userID)
+    if err != nil {
+        http.Error(w, "Failed to retrieve posts", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(posts)
+}
+
+
+
 // Handles PUT requests to update a post
 func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
     postID := chi.URLParam(r, "id")
