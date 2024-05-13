@@ -13,7 +13,7 @@ import (
 
 // Interface for querying posts from db
 type PostRepository interface {
-	CreatePost(ctx context.Context, post model.Post) error
+	CreatePost(ctx context.Context, post *model.Post) error
 	GetPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id string) (*model.Post, error)
 	UpdatePost(ctx context.Context, id string, post model.Post) error
@@ -30,10 +30,15 @@ func NewPostRepository(db *mongo.Database) PostRepository {
 		db: db.Collection("posts"),
 	}
 }
+
 // Inserts a new post into the database
-func (r *postRepository) CreatePost(ctx context.Context, post model.Post) error {
-	_, err := r.db.InsertOne(ctx, post)
-    return err
+func (r *postRepository) CreatePost(ctx context.Context, post *model.Post) error {
+	result, err := r.db.InsertOne(ctx, post)
+    if err != nil {
+        return err
+    }
+    post.ID = result.InsertedID.(primitive.ObjectID)
+    return nil
 }
 
 // FindAll returns all posts from the database
@@ -80,7 +85,6 @@ func (r *postRepository) UpdatePost(ctx context.Context, id string, post model.P
         "$set": bson.M{
             "title": post.Title,
             "content": post.Content,
-            "published": post.Published,
             "updatedAt": time.Now(),
         },
     }

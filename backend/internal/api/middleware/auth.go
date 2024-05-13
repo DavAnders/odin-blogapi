@@ -16,9 +16,12 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-type contextKey string // Used to store the user ID in the context of each request.
+type ContextKey string // Used to store the user ID in the context of each request.
 
-const userIDKey contextKey = "userID"
+const (
+    UserIDKey ContextKey = "userID"
+    UsernameKey ContextKey = "username"
+)
 
 // AuthMiddleware validates the JWT token from the Authorization header and injects the user ID into the context.
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -54,8 +57,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
             return
         }
 
-        // Inject user ID into the context of each request using our custom type.
-        ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
+        // Inject user ID and username into the context of each request
+        ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+        ctx = context.WithValue(ctx, UsernameKey, claims.Username) 
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }

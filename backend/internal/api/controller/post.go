@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/DavAnders/odin-blogapi/backend/internal/api/middleware"
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
 	"github.com/go-chi/chi/v5"
@@ -25,21 +26,52 @@ func NewPostController(repo repository.PostRepository) *PostController {
 
 // Handles POST requests
 func (c *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
-	var post model.Post
-	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	post.ID = primitive.NewObjectID()
-	post.PublishedAt = time.Now()
-
-	if err := c.repo.CreatePost(context.Background(), post); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+    var post model.Post
+    if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+        http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
         return
     }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+    post.PublishedAt = time.Now()
+
+    userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+    if !ok {
+        http.Error(w, "Unauthorized - User ID missing or invalid", http.StatusUnauthorized)
+        return
+    }
+
+    objID, err := primitive.ObjectIDFromHex(userID)
+    if err != nil {
+        http.Error(w, "Unauthorized - User ID conversion error: "+err.Error(), http.StatusUnauthorized)
+        return
+    }
+    post.AuthorID = objID
+
+    username, ok := r.Context().Value(middleware.UsernameKey).(string)
+    if !ok {
+        http.Error(w, "Unauthorized - Missing username", http.StatusUnauthorized)
+        return
+    }
+    post.AuthorUsername = username
+
+    if err := c.repo.CreatePost(r.Context(), &post); err != nil {
+        http.Error(w, "Failed to create post: "+err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    post.AuthorUsername = username
+    
+    response := model.PostResponse{
+        ID:             post.ID.Hex(),
+        Title:          post.Title,
+        Content:        post.Content,
+        PublishedAt:    post.PublishedAt,
+        AuthorID:       post.AuthorID.Hex(), 
+        AuthorUsername: post.AuthorUsername,
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
 }
 
 // Handles GET requests to retrieve all posts
