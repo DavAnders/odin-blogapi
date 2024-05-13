@@ -17,8 +17,14 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user model.User) error
 	GetUser(ctx context.Context, id string) (*model.User, error)
-	GetUsers(ctx context.Context) ([]model.User, error)
+	GetUsers(ctx context.Context) ([]UserProjection, error)
 	ValidateCredentials(ctx context.Context, username, password string) (*model.User, error)
+}
+
+// UserProjection is a struct used to project only the necessary fields from a user
+type UserProjection struct {
+    Username  string    `bson:"username,omitempty" json:"username,omitempty"`
+    CreatedAt time.Time `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
 }
 
 type userRepository struct {
@@ -83,15 +89,16 @@ func (r *userRepository) GetUser(ctx context.Context, id string) (*model.User, e
 }
 
 // Returns all users from the database
-func (r *userRepository) GetUsers(ctx context.Context) ([]model.User, error) {
-	var users []model.User
-	cur, err := r.db.Find(ctx, bson.M{}, options.Find())  // Can limit / sort if needed
+func (r *userRepository) GetUsers(ctx context.Context) ([]UserProjection, error) {
+	var users []UserProjection // Only project the necessary fields
+	opts := options.Find().SetProjection(bson.M{"username": 1, "createdAt": 1})
+	cur, err := r.db.Find(ctx, bson.M{}, opts)  // Can limit / sort if needed
 	if err != nil {
 		return nil, err
 	}
 	defer cur.Close(ctx)
 	for cur.Next(ctx) {
-		var user model.User
+		var user UserProjection
 		if err := cur.Decode(&user); err != nil {
 			return nil, err
 		}

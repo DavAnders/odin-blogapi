@@ -24,6 +24,7 @@ function LoginForm() {
         console.log("Login Successful:", data);
         localStorage.setItem("token", data.token);
         navigate("/dashboard");
+        console.log("Navigated to dashboard");
       } else {
         const errorData = await response.text();
         console.error("Login Failed:", errorData);
