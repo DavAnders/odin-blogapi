@@ -42,7 +42,10 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    setTokenAsCookie(w, token)
+    // setTokenAsCookie(w, token)
+	// Return the token in the JSON response instead of setting a cookie for now
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"; // Corrected the import statement
 import PropTypes from "prop-types";
 
 const Navbar = ({ onLogout }) => {
@@ -77,12 +77,25 @@ const Dashboard = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
+    if (!token) {
+      console.log("No token found, navigating to login");
+      navigate("/login");
+      return;
+    }
+
+    try {
       const decodedUser = jwtDecode(token);
+      if (decodedUser.exp * 1000 < Date.now()) {
+        console.log("Token is expired, navigating to login");
+        navigate("/login");
+        return;
+      }
       setUser(decodedUser);
       fetchUserPosts(token, decodedUser.userId);
       fetchRecentPosts(token);
-    } else {
+    } catch (error) {
+      console.error("Failed to decode token or token is expired:", error);
+      localStorage.removeItem("token");
       navigate("/login");
     }
   }, [navigate]);
@@ -124,6 +137,10 @@ const Dashboard = () => {
     navigate("/create-post");
   };
 
+  if (!user) {
+    return <div>Loading user info...</div>; // Return a loading indicator if user data is not yet available
+  }
+
   return (
     <div>
       <Navbar onLogout={handleLogout} />
@@ -134,7 +151,7 @@ const Dashboard = () => {
           alignItems: "center",
         }}
       >
-        {user && <UserInfo user={user} />}
+        <UserInfo user={user} />
         <button
           onClick={handleCreatePost}
           style={{ margin: "10px", padding: "10px 20px" }}

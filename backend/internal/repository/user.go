@@ -39,16 +39,18 @@ func NewUserRepository(db *mongo.Database) UserRepository {
 
 // Inserts a new user into the database
 func (r *userRepository) CreateUser(ctx context.Context, user model.User) error {
+	// Validate required fields
 	if user.Email == "" {
-        return fmt.Errorf("email is required")
-    }
-    if user.Username == "" {
-        return fmt.Errorf("username is required")
-    }
+		return fmt.Errorf("email is required")
+	}
+	if user.Username == "" {
+		return fmt.Errorf("username is required")
+	}
 	if user.Password == "" {
 		return fmt.Errorf("password is required")
 	}
 
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -58,17 +60,27 @@ func (r *userRepository) CreateUser(ctx context.Context, user model.User) error 
 	user.Password = "" // Clear the plain password
 	user.CreatedAt = time.Now()
 
+	// Assign an ObjectID if not already specified
 	if user.ID.IsZero() {
-        user.ID = primitive.NewObjectID()
-    }
+		user.ID = primitive.NewObjectID()
+	}
 
+	// Insert the user into the database
 	result, err := r.db.InsertOne(ctx, user)
 	if err != nil {
 		log.Printf("Error inserting user into database: %v", err)
 		return err
 	}
-	log.Printf("Inserted user with ID: %v", result.InsertedID)
-	
+
+	// Type assert the InsertedID and update the user's ID
+	oid, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		log.Printf("Failed to assert InsertedID to ObjectID")
+		return fmt.Errorf("failed to assert InsertedID to ObjectID")
+	}
+	user.ID = oid
+
+	log.Printf("Inserted user with ID: %v", user.ID.Hex())
 	return nil
 }
 

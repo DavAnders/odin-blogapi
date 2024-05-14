@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/DavAnders/odin-blogapi/backend/pkg/jwt"
 )
@@ -34,14 +33,14 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
-func setTokenAsCookie(w http.ResponseWriter, tokenString string) {
-    http.SetCookie(w, &http.Cookie{
-        Name:     "token",
-        Value:    tokenString,
-        Expires:  time.Now().Add(1 * time.Hour),
-        HttpOnly: true, // JavaScript can't access cookie
-        Path:     "/",  // Cookie available on all paths
-        Secure:   false, // For development purposes
-        SameSite: http.SameSiteStrictMode,
-    })
-}
+// func setTokenAsCookie(w http.ResponseWriter, tokenString string) {
+//     http.SetCookie(w, &http.Cookie{
+//         Name:     "token",
+//         Value:    tokenString,
+//         Expires:  time.Now().Add(1 * time.Hour),
+//         HttpOnly: true, // JavaScript can't access cookie
+//         Path:     "/",  // Cookie available on all paths
+//         Secure:   false, // For development purposes
+//         SameSite: http.SameSiteStrictMode,
+//     })
+// }

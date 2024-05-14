@@ -16,14 +16,15 @@ function RegistrationForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password, email }),
+        credentials: "include", // Necessary to ensure cookies are sent with the request
       });
 
       if (response.ok) {
         console.log("Registration Successful");
-        navigate("/dashboard"); // Redirect to the dashboard after successful registration
+        navigate("/dashboard");
       } else {
-        const errorData = await response.text(); // Text instead of json, don't need the token from response
-        console.error("Registration Failed:", errorData);
+        const errorData = await response.json();
+        console.error("Registration Failed:", errorData.message);
       }
     } catch (error) {
       console.error("Error during registration:", error);
