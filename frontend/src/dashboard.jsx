@@ -38,6 +38,8 @@ UserInfo.propTypes = {
 };
 
 const PostsList = ({ title, posts }) => {
+  const navigate = useNavigate();
+
   return (
     <div style={{ margin: "20px", padding: "10px", border: "1px solid gray" }}>
       <h4>{title}</h4>
@@ -45,7 +47,13 @@ const PostsList = ({ title, posts }) => {
         <ul>
           {posts.map((post) => (
             <li key={post.id}>
-              {post.title} - {new Date(post.publishedAt).toLocaleDateString()}
+              <span
+                style={{ cursor: "pointer", color: "blue" }}
+                onClick={() => navigate(`/posts/${post.id}`)}
+              >
+                {post.title}
+              </span>{" "}
+              - {new Date(post.publishedAt).toLocaleDateString()}
             </li>
           ))}
         </ul>

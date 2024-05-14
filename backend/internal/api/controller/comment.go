@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/DavAnders/odin-blogapi/backend/internal/api/middleware"
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
 	"github.com/go-chi/chi/v5"
@@ -23,39 +25,76 @@ func NewCommentController(repo repository.CommentRepository) *CommentController 
 
 // Handles POST requests to create a new comment
 func (c *CommentController) CreateComment(w http.ResponseWriter, r *http.Request) {
-	var comment model.Comment
-	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
-		http.Error(w, "Invalid comment data", http.StatusBadRequest)
-		return
-	}
-	comment.ID = primitive.NewObjectID()
+    var comment model.Comment
+    if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+        http.Error(w, "Invalid comment data", http.StatusBadRequest)
+        return
+    }
 
-	if err := c.repo.CreateComment(context.Background(), comment); err != nil {
-		http.Error(w, "Failed to create comment", http.StatusInternalServerError)
-		return
-	}
+    // Get the user ID and username from the context
+    userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    username, ok := r.Context().Value(middleware.UsernameKey).(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comment)
+    objID, err := primitive.ObjectIDFromHex(userID)
+    if err != nil {
+        http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+        return
+    }
+
+    postObjID, err := primitive.ObjectIDFromHex(comment.PostID.Hex())
+    if err != nil {
+        http.Error(w, "Invalid post ID", http.StatusBadRequest)
+        return
+    }
+
+    comment.AuthorID = objID
+    comment.Author = username
+    comment.ID = primitive.NewObjectID()
+    comment.CreatedAt = time.Now()
+    comment.PostID = postObjID 
+
+    if err := c.repo.CreateComment(context.Background(), comment); err != nil {
+        http.Error(w, "Failed to create comment", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(comment)
 }
+
 
 // Handles GET requests to retrieve all comments for a post
 func (c *CommentController) GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
     postID := chi.URLParam(r, "id")
-	if postID == "" {
-		http.Error(w, "Post ID is required", http.StatusBadRequest)
-		return
-	}
+    if postID == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
 
-	comments, err := c.repo.GetCommentsByPost(context.Background(), postID)
-	if err != nil {
-		http.Error(w, "Failed to retrieve comments", http.StatusInternalServerError)
-		return
-	}
+    objID, err := primitive.ObjectIDFromHex(postID)
+    if err != nil {
+        http.Error(w, "Invalid Post ID", http.StatusBadRequest)
+        return
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comments)
+    comments, err := c.repo.GetCommentsByPost(context.Background(), objID)
+    if err != nil {
+        http.Error(w, "Failed to retrieve comments", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(comments)
 }
+
 
 // Handles PUT requests to update a comment
 func (c *CommentController) UpdateComment(w http.ResponseWriter, r *http.Request) {

@@ -13,7 +13,7 @@ import (
 
 type CommentRepository interface {
 	CreateComment(ctx context.Context, comment model.Comment) error
-	GetCommentsByPost(ctx context.Context, postID string) ([]model.Comment, error)
+	GetCommentsByPost(ctx context.Context, postID primitive.ObjectID) ([]model.Comment, error)
 	UpdateComment(ctx context.Context, id string, userID string, comment model.Comment) error
 	DeleteComment(ctx context.Context, id string, userID *string) error
 }
@@ -29,11 +29,14 @@ func NewCommentRepository(db *mongo.Database) CommentRepository {
 }
 
 func (r *commentRepository) CreateComment(ctx context.Context, comment model.Comment) error {
-	_, err := r.db.InsertOne(ctx, comment)
-	return err
+    comment.ID = primitive.NewObjectID()
+    comment.CreatedAt = time.Now()
+    _, err := r.db.InsertOne(ctx, comment)
+    return err
 }
 
-func (r *commentRepository) GetCommentsByPost(ctx context.Context, postID string) ([]model.Comment, error) {
+
+func (r *commentRepository) GetCommentsByPost(ctx context.Context, postID primitive.ObjectID) ([]model.Comment, error) {
 	var comments []model.Comment
 	filter := bson.M{"postId": postID}
 	cur, err := r.db.Find(ctx, filter)

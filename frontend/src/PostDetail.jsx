@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Comments from "./Comments";
 
 function PostDetail() {
   const { id } = useParams();
@@ -43,6 +44,7 @@ function PostDetail() {
         Published by {post.authorUsername} on{" "}
         {new Date(post.publishedAt).toLocaleString()}
       </small>
+      <Comments postId={id} />
     </div>
   );
 }
