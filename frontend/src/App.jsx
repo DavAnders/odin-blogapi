@@ -12,6 +12,7 @@ import Posts from "./posts";
 import UserList from "./userList";
 import CreatePost from "./createPost";
 import PostDetail from "./PostDetail";
+import EditPost from "./EditPost";
 
 function App() {
   // Simple function to check if user is authenticated
@@ -34,6 +35,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/posts/:id" element={<PostDetail />} />
+          <Route path="/edit-post/:id" element={<EditPost />} />
         </Routes>
       </div>
     </Router>

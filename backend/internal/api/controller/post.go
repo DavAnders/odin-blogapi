@@ -158,20 +158,27 @@ func (c *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    var post model.Post
-    if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+    var updatedPost model.Post
+    if err := json.NewDecoder(r.Body).Decode(&updatedPost); err != nil {
         http.Error(w, "Invalid request body", http.StatusBadRequest)
         return
     }
 
-    if err := c.repo.UpdatePost(context.Background(), postID, post); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+    objID, err := primitive.ObjectIDFromHex(postID)
+    if err != nil {
+        http.Error(w, "Invalid Post ID", http.StatusBadRequest)
+        return
+    }
+
+    updatedPost.ID = objID
+
+    if err := c.repo.UpdatePost(context.Background(), updatedPost); err != nil {
+        http.Error(w, "Failed to update post", http.StatusInternalServerError)
         return
     }
 
     w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK) // Explicitly signify a successful update
-    json.NewEncoder(w).Encode(post)
+    json.NewEncoder(w).Encode(updatedPost)
 }
 
 // Handles DELETE requests to delete a post
