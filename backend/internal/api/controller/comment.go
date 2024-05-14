@@ -134,25 +134,30 @@ func (c *CommentController) DeleteComment(w http.ResponseWriter, r *http.Request
         return
     }
 
-    // Extract userID from context, make sure it's available
-    userIDValue := r.Context().Value("userID")  // Retrieve the userID from context
+    // Extract userID from context
+    userIDValue := r.Context().Value(middleware.UserIDKey)
     userID, ok := userIDValue.(string)
     if !ok || userID == "" {
         http.Error(w, "Unauthorized or bad request", http.StatusUnauthorized)
         return
     }
 
-    // Convert userID to pointer for repository call
-    userIDPtr := &userID
+    // Convert userID to primitive.ObjectID
+    objUserID, err := primitive.ObjectIDFromHex(userID)
+    if err != nil {
+        http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+        return
+    }
 
     // Delete the comment directly with user authorization check in the repo layer
-    if err := c.repo.DeleteComment(context.Background(), commentID, userIDPtr); err != nil {
+    if err := c.repo.DeleteComment(context.Background(), commentID, &objUserID); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
     w.WriteHeader(http.StatusNoContent) // No Content is typical for a successful delete operation
 }
+
 
 
 // Deletes a comment by ID, only if the user is an admin

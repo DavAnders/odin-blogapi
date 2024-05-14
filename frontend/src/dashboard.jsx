@@ -94,8 +94,11 @@ const Dashboard = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => setUserPosts(data))
-      .catch((error) => console.error("Error fetching user posts:", error));
+      .then((data) => setUserPosts(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error("Error fetching user posts:", error);
+        setUserPosts([]);
+      });
   };
 
   const fetchRecentPosts = (token) => {
@@ -105,8 +108,11 @@ const Dashboard = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => setRecentPosts(data))
-      .catch((error) => console.error("Error fetching recent posts:", error));
+      .then((data) => setRecentPosts(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error("Error fetching recent posts:", error);
+        setRecentPosts([]);
+      });
   };
 
   const handleLogout = () => {

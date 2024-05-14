@@ -15,7 +15,7 @@ type CommentRepository interface {
 	CreateComment(ctx context.Context, comment model.Comment) error
 	GetCommentsByPost(ctx context.Context, postID primitive.ObjectID) ([]model.Comment, error)
 	UpdateComment(ctx context.Context, id string, userID string, comment model.Comment) error
-	DeleteComment(ctx context.Context, id string, userID *string) error
+	DeleteComment(ctx context.Context, id string, userID *primitive.ObjectID) error
 }
 
 type commentRepository struct {
@@ -80,7 +80,7 @@ func (r *commentRepository) UpdateComment(ctx context.Context, id string, userID
     return nil
 }
 
-func (r *commentRepository) DeleteComment(ctx context.Context, id string, userID *string) error {
+func (r *commentRepository) DeleteComment(ctx context.Context, id string, userID *primitive.ObjectID) error {
     objID, err := primitive.ObjectIDFromHex(id)
     if err != nil {
         return err  // If the ID is not a valid ObjectId
@@ -88,7 +88,7 @@ func (r *commentRepository) DeleteComment(ctx context.Context, id string, userID
 
     filter := bson.M{"_id": objID}
     if userID != nil {
-        filter["author"] = *userID // Add author check only if userID is provided
+        filter["authorId"] = *userID // Add author check only if userID is provided
     }
 
     result, err := r.db.DeleteOne(ctx, filter)
@@ -103,4 +103,5 @@ func (r *commentRepository) DeleteComment(ctx context.Context, id string, userID
     }
     return nil
 }
+
 
