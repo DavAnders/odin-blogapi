@@ -1,37 +1,34 @@
-import { useEffect, useState } from "react";
+// dashboard.jsx
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"; // Corrected the import statement
+import { AuthContext } from "./auth/AuthContext";
 import PropTypes from "prop-types";
 
-const Navbar = ({ onLogout }) => {
-  return (
-    <div
-      style={{
-        padding: "10px",
-        backgroundColor: "#f0f0f0",
-        display: "flex",
-        justifyContent: "space-between",
-      }}
-    >
-      <span>My Dashboard</span>
-      <button onClick={onLogout}>Logout</button>
-    </div>
-  );
-};
+const Navbar = ({ onLogout }) => (
+  <div
+    style={{
+      padding: "10px",
+      backgroundColor: "#f0f0f0",
+      display: "flex",
+      justifyContent: "space-between",
+    }}
+  >
+    <span>My Dashboard</span>
+    <button onClick={onLogout}>Logout</button>
+  </div>
+);
 
 Navbar.propTypes = {
   onLogout: PropTypes.func.isRequired,
 };
 
-const UserInfo = ({ user }) => {
-  return (
-    <div style={{ margin: "20px", padding: "10px", border: "1px solid gray" }}>
-      <h4>User Information</h4>
-      <p>Username: {user.username}</p>
-      <p>User ID: {user.userId}</p>
-    </div>
-  );
-};
+const UserInfo = ({ user }) => (
+  <div style={{ margin: "20px", padding: "10px", border: "1px solid gray" }}>
+    <h4>User Information</h4>
+    <p>Username: {user.username}</p>
+    <p>User ID: {user.userId}</p>
+  </div>
+);
 
 UserInfo.propTypes = {
   user: PropTypes.object.isRequired,
@@ -39,7 +36,6 @@ UserInfo.propTypes = {
 
 const PostsList = ({ title, posts }) => {
   const navigate = useNavigate();
-
   return (
     <div style={{ margin: "20px", padding: "10px", border: "1px solid gray" }}>
       <h4>{title}</h4>
@@ -71,57 +67,45 @@ PostsList.propTypes = {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, logout, loading } = useContext(AuthContext);
   const [userPosts, setUserPosts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
 
   useEffect(() => {
+    if (user) {
+      fetchUserPosts(user.userId);
+      fetchRecentPosts();
+    }
+  }, [user]);
+
+  const fetchUserPosts = (userId) => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      console.log("No token found, navigating to login");
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const decodedUser = jwtDecode(token);
-      if (decodedUser.exp * 1000 < Date.now()) {
-        console.log("Token is expired, navigating to login");
-        navigate("/login");
-        return;
-      }
-      setUser(decodedUser);
-      fetchUserPosts(token, decodedUser.userId);
-      fetchRecentPosts(token);
-    } catch (error) {
-      console.error("Failed to decode token or token is expired:", error);
-      localStorage.removeItem("token");
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  const fetchUserPosts = (token, userId) => {
     fetch(`${import.meta.env.VITE_API_URL}/api/posts/user/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
       .then((response) => response.json())
-      .then((data) => setUserPosts(Array.isArray(data) ? data : []))
+      .then((data) => {
+        setUserPosts(Array.isArray(data) ? data : []);
+      })
       .catch((error) => {
         console.error("Error fetching user posts:", error);
         setUserPosts([]);
       });
   };
 
-  const fetchRecentPosts = (token) => {
+  const fetchRecentPosts = () => {
+    const token = localStorage.getItem("token");
     fetch(`${import.meta.env.VITE_API_URL}/api/posts`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
       .then((response) => response.json())
-      .then((data) => setRecentPosts(Array.isArray(data) ? data : []))
+      .then((data) => {
+        setRecentPosts(Array.isArray(data) ? data : []);
+      })
       .catch((error) => {
         console.error("Error fetching recent posts:", error);
         setRecentPosts([]);
@@ -129,16 +113,15 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+    logout();
   };
 
   const handleCreatePost = () => {
     navigate("/create-post");
   };
 
-  if (!user) {
-    return <div>Loading user info...</div>; // Return a loading indicator if user data is not yet available
+  if (loading) {
+    return <div>Loading user info...</div>;
   }
 
   return (

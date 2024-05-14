@@ -64,9 +64,7 @@ function Comments({ postId }) {
       );
       if (!response.ok) throw new Error("Failed to submit comment");
       const comment = await response.json();
-      setComments((prevComments) =>
-        Array.isArray(prevComments) ? [...prevComments, comment] : [comment]
-      );
+      setComments((prevComments) => [...prevComments, comment]);
       setNewComment("");
     } catch (error) {
       console.error("Submit error:", error);
@@ -104,21 +102,19 @@ function Comments({ postId }) {
     <div>
       <h3>Comments</h3>
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {Array.isArray(comments) &&
-          comments.map((comment) => (
-            <li key={comment.id} style={{ margin: "10px 0" }}>
-              <p>{comment.content}</p>
-              <small>
-                {comment.author} on{" "}
-                {new Date(comment.createdAt).toLocaleString()}
-              </small>
-              {user && user.userId === comment.authorId && (
-                <button onClick={() => handleDeleteComment(comment.id)}>
-                  Delete
-                </button>
-              )}
-            </li>
-          ))}
+        {comments.map((comment) => (
+          <li key={comment.id} style={{ margin: "10px 0" }}>
+            <p>{comment.content}</p>
+            <small>
+              {comment.author} on {new Date(comment.createdAt).toLocaleString()}
+            </small>
+            {user && user.userId === comment.authorId && (
+              <button onClick={() => handleDeleteComment(comment.id)}>
+                Delete
+              </button>
+            )}
+          </li>
+        ))}
       </ul>
       <form onSubmit={handleCommentSubmit}>
         <textarea
@@ -132,9 +128,7 @@ function Comments({ postId }) {
     </div>
   );
 }
-
 Comments.propTypes = {
   postId: PropTypes.string.isRequired,
 };
-
 export default Comments;
