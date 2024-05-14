@@ -11,6 +11,7 @@ import "./App.css";
 import Posts from "./posts";
 import UserList from "./userList";
 import CreatePost from "./createPost";
+import PostDetail from "./PostDetail";
 
 function App() {
   // Simple function to check if user is authenticated
@@ -32,6 +33,7 @@ function App() {
           <Route path="/posts" element={<Posts />} />
           <Route path="*" element={<Navigate to="/login" />} />
           <Route path="/create-post" element={<CreatePost />} />
+          <Route path="/posts/:id" element={<PostDetail />} />
         </Routes>
       </div>
     </Router>

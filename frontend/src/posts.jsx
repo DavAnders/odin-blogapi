@@ -59,14 +59,17 @@ function Posts() {
               border: "1px solid #ccc",
               borderRadius: "8px",
             }}
-            /* Inline for now */
           >
-            <h3>{post.title}</h3>
+            <h3
+              style={{ cursor: "pointer", color: "blue" }}
+              onClick={() => navigate(`/posts/${post.id}`)}
+            >
+              {post.title}
+            </h3>
             <p>
               {post.content.substring(0, 200)}
               {post.content.length > 200 ? "..." : ""}
-            </p>{" "}
-            {/* Display only the first 200 characters */}
+            </p>
             <small>
               Published by {post.authorUsername} on{" "}
               {formatDate(post.publishedAt)}
