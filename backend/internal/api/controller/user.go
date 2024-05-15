@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/DavAnders/odin-blogapi/backend/internal/api/middleware"
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
 	"github.com/DavAnders/odin-blogapi/backend/pkg/jwt"
@@ -130,3 +131,58 @@ func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
+
+func (c *UserController) GetUserProfile(w http.ResponseWriter, r *http.Request) {
+    userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+    if !ok || userID == "" {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    user, err := c.repo.GetUser(r.Context(), userID)
+    if err != nil {
+        log.Println("Failed to retrieve user:", err)
+        http.Error(w, "Failed to retrieve user", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(user)
+}
+
+
+func (c *UserController) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
+    userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+    if !ok || userID == "" {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    var updatedFields struct {
+        Bio           string `json:"bio"`
+        ProfilePicURL string `json:"profilePicUrl"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&updatedFields); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    user, err := c.repo.GetUser(r.Context(), userID)
+    if err != nil {
+        log.Println("Failed to retrieve user:", err)
+        http.Error(w, "Failed to retrieve user", http.StatusInternalServerError)
+        return
+    }
+
+    user.Bio = updatedFields.Bio
+    user.ProfilePicURL = updatedFields.ProfilePicURL
+
+    if err := c.repo.UpdateUser(r.Context(), *user); err != nil {
+        http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(user)
+}
+

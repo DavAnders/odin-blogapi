@@ -74,6 +74,9 @@ func main() {
 		r.Put("/posts/{id}", postController.UpdatePost)
 		r.Delete("/posts/{id}", postController.DeletePost)
 
+		r.Get("/profile", userController.GetUserProfile)
+        r.Put("/profile", userController.UpdateUserProfile)
+
 		r.Get("/users", userController.GetUsers)
 		r.Post("/users", userController.CreateUser)
 		r.Get("/users/{id}", userController.GetUser)

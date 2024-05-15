@@ -14,4 +14,7 @@ type User struct {
 	Email string `bson:"email" json:"email" binding:"required"`
 	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
 	Author bool `bson:"author" json:"author"`
+	Bio            string             `bson:"bio,omitempty" json:"bio,omitempty"`
+    ProfilePicURL  string             `bson:"profilePicUrl,omitempty" json:"profilePicUrl,omitempty"`
+    UpdatedAt      time.Time          `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
 }

@@ -47,7 +47,7 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
     claims := &Claims{}
 
     token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-        return jwtKey, nil
+        return getJWTKey(), nil
     })
 
     if claims, ok := token.Claims.(*Claims); ok && token.Valid {

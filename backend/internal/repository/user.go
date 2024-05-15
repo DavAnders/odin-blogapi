@@ -20,6 +20,7 @@ type UserRepository interface {
 	GetUsers(ctx context.Context) ([]UserProjection, error)
 	ValidateCredentials(ctx context.Context, username, password string) (*model.User, error)
 	GetUserByUsername(ctx context.Context, username string) (model.User, error)
+	UpdateUser(ctx context.Context, user model.User) error
 }
 
 // UserProjection is a struct used to project only the necessary fields from a user
@@ -60,6 +61,7 @@ func (r *userRepository) CreateUser(ctx context.Context, user model.User) error 
 	user.HashedPassword = string(hashedPassword)
 	user.Password = "" // Clear the plain password
 	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
 
 	// Assign an ObjectID if not already specified
 	if user.ID.IsZero() {
@@ -159,4 +161,25 @@ func (r *userRepository) GetUserByUsername(ctx context.Context, username string)
         return model.User{}, err
     }
     return user, nil
+}
+
+func (r *userRepository) UpdateUser(ctx context.Context, user model.User) error {
+    user.UpdatedAt = time.Now()
+    update := bson.M{
+        "$set": bson.M{
+            "bio":           user.Bio,
+            "profilePicUrl": user.ProfilePicURL,
+            "updatedAt":     user.UpdatedAt,
+        },
+    }
+
+    filter := bson.M{"_id": user.ID}
+    _, err := r.db.UpdateOne(ctx, filter, update)
+    if err != nil {
+        log.Printf("Error updating user: %v", err)
+        return err
+    }
+
+    log.Printf("Updated user with ID: %v", user.ID.Hex())
+    return nil
 }
