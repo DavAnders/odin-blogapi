@@ -44,9 +44,9 @@ func main() {
 	log.Println("Connected to MongoDB")
 
 	// Initialize repositories
-	postRepo := repository.NewPostRepository(client.Database("blog"))
-	userRepo := repository.NewUserRepository(client.Database("blog"))
-	commentRepo := repository.NewCommentRepository(client.Database("blog"))
+	postRepo := repository.NewPostRepository(client.Database("blogprod"))
+	userRepo := repository.NewUserRepository(client.Database("blogprod"))
+	commentRepo := repository.NewCommentRepository(client.Database("blogprod"))
 
 	// Initialize controllers
 	postController := controller.NewPostController(postRepo)
@@ -93,6 +93,10 @@ func main() {
 			r.Delete("/comments/{id}", commentController.AdminDeleteComment)
 		})
 	})
+
+	// Serve files
+	fs := http.FileServer(http.Dir("../../public"))
+	r.Handle("/*", fs)
 
 	// Start server
 	log.Println("Starting server on port 8080")
