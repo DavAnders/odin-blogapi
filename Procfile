@@ -1,1 +1,1 @@
-web: backend/cmd/api/main
+web: cd backend && ./main
