@@ -1,0 +1,18 @@
+build:
+  # Define build processes for Go and Node.js
+  go:
+    import_path: ./backend/cmd/api
+  nodejs:
+    dir: ./frontend
+  post_compile:
+    # Combines the steps from heroku-build.sh and package.json
+    - cd frontend && npm install && npm run build && mkdir -p ../backend/public && mv dist/* ../backend/public/
+    - cd ../backend && go build -o main ./cmd/api
+
+release:
+  # Optional release tasks
+  - echo "Application is about to be released"
+
+run:
+  # Command to run the application
+  web: cd backend && ./main
