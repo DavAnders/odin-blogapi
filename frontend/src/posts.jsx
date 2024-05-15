@@ -61,7 +61,7 @@ function Posts() {
             }}
           >
             <h3
-              style={{ cursor: "pointer", color: "blue" }}
+              style={{ cursor: "pointer", color: "violet" }}
               onClick={() => navigate(`/posts/${post.id}`)}
             >
               {post.title}

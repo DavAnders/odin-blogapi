@@ -14,10 +14,11 @@ const Navbar = ({ onLogout }) => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        color: "grey",
       }}
     >
-      <span>My Dashboard</span>
-      <div>
+      <h2 style={{ color: "black", marginRight: "5vw" }}>Dashboard</h2>
+      <div style={{ marginLeft: "auto" }}>
         <button
           onClick={() => navigate("/profile")}
           style={{ marginRight: "10px" }}
@@ -60,14 +61,24 @@ UserInfo.propTypes = {
 const PostsList = ({ title, posts }) => {
   const navigate = useNavigate();
   return (
-    <div style={{ margin: "20px", padding: "10px", border: "1px solid gray" }}>
+    <div
+      style={{
+        margin: "20px",
+        minWidth: "200px",
+        border: "1px solid gray",
+        padding: "20px",
+      }}
+    >
       <h4>{title}</h4>
       {posts.length > 0 ? (
-        <ul>
+        <ul style={{ listStyle: "none", paddingInlineStart: "0" }}>
           {posts.map((post) => (
             <li key={post.id}>
               <span
-                style={{ cursor: "pointer", color: "blue" }}
+                style={{
+                  cursor: "pointer",
+                  color: "violet",
+                }}
                 onClick={() => navigate(`/posts/${post.id}`)}
               >
                 {post.title}
@@ -177,6 +188,7 @@ const Dashboard = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          padding: "20px",
         }}
       >
         <UserInfo user={{ ...user, ...profile }} />

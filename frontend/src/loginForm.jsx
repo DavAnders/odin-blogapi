@@ -38,22 +38,26 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleLogin}>
-      <label>
-        Username:
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </label>
-      <label>
-        Password:
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </label>
+      <div className="form-group">
+        <label>
+          Username:
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
+      </div>
+      <div className="form-group">
+        <label>
+          Password:
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+      </div>
       <button type="submit">Login</button>
       <button type="button" onClick={() => navigate("/register")}>
         Register

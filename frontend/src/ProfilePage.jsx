@@ -93,24 +93,32 @@ function ProfilePage() {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {isAuthenticated ? (
         <form onSubmit={handleUpdateProfile}>
-          <label>
-            Bio:
-            <textarea
-              value={profile.bio}
-              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-            />
-          </label>
-          <label>
-            Profile Picture URL:
-            <input
-              type="text"
-              value={profile.profilePicUrl}
-              onChange={(e) =>
-                setProfile({ ...profile, profilePicUrl: e.target.value })
-              }
-            />
-          </label>
-          <button type="submit">Update Profile</button>
+          <div className="form-group">
+            <label>
+              Bio:
+              <textarea
+                value={profile.bio}
+                onChange={(e) =>
+                  setProfile({ ...profile, bio: e.target.value })
+                }
+              />
+            </label>
+          </div>
+          <div className="form-group">
+            <label>
+              Profile Picture URL:
+              <input
+                type="text"
+                value={profile.profilePicUrl}
+                onChange={(e) =>
+                  setProfile({ ...profile, profilePicUrl: e.target.value })
+                }
+              />
+            </label>
+          </div>
+          <div className="updateButton" style={{ marginBottom: "10px" }}>
+            <button type="submit">Update Profile</button>
+          </div>
         </form>
       ) : (
         <p>Please log in to view and edit your profile.</p>
