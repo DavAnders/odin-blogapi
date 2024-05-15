@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/DavAnders/odin-blogapi/backend/internal/model"
 	"github.com/DavAnders/odin-blogapi/backend/internal/repository"
@@ -31,23 +32,56 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if err := c.repo.CreateUser(r.Context(), user); err != nil {
+    // Check if the username already exists
+    _, err := c.repo.GetUserByUsername(r.Context(), user.Username)
+    if err == nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusConflict)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Username already exists"})
+        return
+    } else if err.Error() != "user not found" {
+        http.Error(w, "Failed to check user existence", http.StatusInternalServerError)
+        return
+    }
+
+    // Create the new user
+    err = c.repo.CreateUser(r.Context(), user)
+    if err != nil {
         http.Error(w, "Failed to create user", http.StatusInternalServerError)
         return
     }
 
-    token, err := jwt.GenerateToken(user)
+    // Retrieve the newly created user from the database
+    createdUser, err := c.repo.GetUserByUsername(r.Context(), user.Username)
+    if err != nil {
+        http.Error(w, "Failed to retrieve user", http.StatusInternalServerError)
+        return
+    }
+
+    // Generate the JWT token
+    token, err := jwt.GenerateToken(createdUser)
     if err != nil {
         http.Error(w, "Failed to generate token", http.StatusInternalServerError)
         return
     }
 
-    // setTokenAsCookie(w, token)
-	// Return the token in the JSON response instead of setting a cookie for now
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]string{"token": token})
-}
+    // Set the token as a cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "token",
+        Value:    token,
+        Expires:  time.Now().Add(24 * time.Hour),
+        HttpOnly: true,
+        Secure:   true,
+        Path:     "/",
+        SameSite: http.SameSiteStrictMode,
+    })
 
+    // Return the token in the response body as well
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{
+        "token": token,
+    })
+}
 
 // Handles POST requests to create a new user
 func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {

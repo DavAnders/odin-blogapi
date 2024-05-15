@@ -19,6 +19,7 @@ type UserRepository interface {
 	GetUser(ctx context.Context, id string) (*model.User, error)
 	GetUsers(ctx context.Context) ([]UserProjection, error)
 	ValidateCredentials(ctx context.Context, username, password string) (*model.User, error)
+	GetUserByUsername(ctx context.Context, username string) (model.User, error)
 }
 
 // UserProjection is a struct used to project only the necessary fields from a user
@@ -146,4 +147,16 @@ func (r *userRepository) ValidateCredentials(ctx context.Context, username, pass
 
     log.Printf("Credentials validated successfully for user: %s", username)
     return &user, nil
+}
+
+func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
+    var user model.User
+    err := r.db.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+    if err != nil {
+        if err == mongo.ErrNoDocuments {
+            return model.User{}, fmt.Errorf("user not found")
+        }
+        return model.User{}, err
+    }
+    return user, nil
 }
