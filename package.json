@@ -2,6 +2,6 @@
   "name": "heroku-deploy",
   "version": "1.0.0",
   "scripts": {
-    "heroku-postbuild": "cd frontend && npm install && npm run build && mv dist/* ../backend/public/"
+    "heroku-postbuild": "cd frontend && npm install && npm run build && mkdir -p ../backend/public && mv dist/* ../backend/public/"
   }
 }
