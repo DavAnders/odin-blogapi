@@ -7,3 +7,5 @@
 /obj/
 *.o
 *.a
+*.app
+main
