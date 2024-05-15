@@ -1,4 +1,3 @@
-// authcontext.jsx
 import { createContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
@@ -6,7 +5,6 @@ import { jwtDecode } from "jwt-decode";
 
 const checkTokenValidity = (token) => {
   if (!token) return false;
-
   try {
     const decoded = jwtDecode(token);
     const currentTime = Date.now() / 1000;
@@ -26,33 +24,25 @@ const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const initializeAuth = () => {
-      const token = localStorage.getItem("token");
-      console.log("AuthProvider useEffect called");
-      console.log("Token from localStorage on mount:", token);
-      if (checkTokenValidity(token)) {
-        console.log("Token is valid");
-        const decodedUser = jwtDecode(token);
-        setUser(decodedUser);
-        setIsAuthenticated(true);
-      } else {
-        console.log("Token is invalid or expired");
-        setIsAuthenticated(false);
-        setUser(null);
-        localStorage.removeItem("token");
-        navigate("/login");
-      }
-      setLoading(false);
-    };
-
-    initializeAuth();
-  }, [navigate]);
+    const token = localStorage.getItem("token");
+    if (checkTokenValidity(token)) {
+      const decodedUser = jwtDecode(token);
+      console.log("Decoded User on mount:", decodedUser);
+      setUser(decodedUser);
+      setIsAuthenticated(true);
+    } else {
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+    setLoading(false);
+  }, []);
 
   const login = (token) => {
-    console.log("Login called with token:", token);
     if (checkTokenValidity(token)) {
       localStorage.setItem("token", token);
       const decodedUser = jwtDecode(token);
+      console.log("Decoded User after login:", decodedUser);
       setUser(decodedUser);
       setIsAuthenticated(true);
       navigate("/dashboard");
@@ -60,7 +50,6 @@ const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    console.log("Logout called");
     localStorage.removeItem("token");
     setIsAuthenticated(false);
     setUser(null);
@@ -69,7 +58,13 @@ const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, login, logout, loading }}
+      value={{
+        isAuthenticated,
+        user,
+        login,
+        logout,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>

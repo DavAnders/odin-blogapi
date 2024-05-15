@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "./auth/AuthContext";
 
 function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -22,13 +24,11 @@ function LoginForm() {
       if (response.ok) {
         const data = await response.json();
         console.log("Login Successful:", data);
-        localStorage.setItem("token", data.token);
-        navigate("/dashboard");
-        console.log("Navigated to dashboard");
+        login(data.token);
       } else {
         const errorData = await response.text();
         console.error("Login Failed:", errorData);
-        throw new Error(`Login failed: ${errorData}`);
+        setError(`Login failed: ${errorData}`);
       }
     } catch (error) {
       console.error("Error during login:", error);

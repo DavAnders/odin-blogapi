@@ -1,6 +1,6 @@
-// App.jsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
+import ProtectedElement from "./auth/ProtectedElement";
 import LoginForm from "./loginForm";
 import RegistrationForm from "./registerForm";
 import Dashboard from "./dashboard";
@@ -9,14 +9,27 @@ import UserList from "./userList";
 import CreatePost from "./createPost";
 import PostDetail from "./PostDetail";
 import EditPost from "./EditPost";
-import ProtectedElement from "./auth/ProtectedElement";
 
 const App = () => {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/register" element={<RegistrationForm />} />
+        <Route
+          path="/login"
+          element={
+            <ProtectedElement component={LoginForm} isPublic restricted />
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <ProtectedElement
+              component={RegistrationForm}
+              isPublic
+              restricted
+            />
+          }
+        />
         <Route
           path="/dashboard"
           element={<ProtectedElement component={Dashboard} />}
@@ -38,7 +51,10 @@ const App = () => {
           path="/edit-post/:id"
           element={<ProtectedElement component={EditPost} />}
         />
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route
+          path="*"
+          element={<ProtectedElement component={LoginForm} isPublic />}
+        />
       </Routes>
     </AuthProvider>
   );
