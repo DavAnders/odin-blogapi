@@ -9,6 +9,7 @@ import UserList from "./userList";
 import CreatePost from "./createPost";
 import PostDetail from "./PostDetail";
 import EditPost from "./EditPost";
+import ProfilePage from "./ProfilePage";
 
 const App = () => {
   return (
@@ -54,6 +55,10 @@ const App = () => {
         <Route
           path="*"
           element={<ProtectedElement component={LoginForm} isPublic />}
+        />
+        <Route
+          path="/profile"
+          element={<ProtectedElement component={ProfilePage} />}
         />
       </Routes>
     </AuthProvider>

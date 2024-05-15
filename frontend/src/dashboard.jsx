@@ -1,34 +1,57 @@
-// dashboard.jsx
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./auth/AuthContext";
 import PropTypes from "prop-types";
 
-const Navbar = ({ onLogout }) => (
-  <div
-    style={{
-      padding: "10px",
-      backgroundColor: "#f0f0f0",
-      display: "flex",
-      justifyContent: "space-between",
-    }}
-  >
-    <span>My Dashboard</span>
-    <button onClick={onLogout}>Logout</button>
-  </div>
-);
+const Navbar = ({ onLogout }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      style={{
+        padding: "10px",
+        backgroundColor: "#f0f0f0",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <span>My Dashboard</span>
+      <div>
+        <button
+          onClick={() => navigate("/profile")}
+          style={{ marginRight: "10px" }}
+        >
+          Profile
+        </button>
+        <button onClick={onLogout}>Logout</button>
+      </div>
+    </div>
+  );
+};
 
 Navbar.propTypes = {
   onLogout: PropTypes.func.isRequired,
 };
 
-const UserInfo = ({ user }) => (
-  <div style={{ margin: "20px", padding: "10px", border: "1px solid gray" }}>
-    <h4>User Information</h4>
-    <p>Username: {user.username}</p>
-    <p>User ID: {user.userId}</p>
-  </div>
-);
+const UserInfo = ({ user }) => {
+  if (!user) {
+    return null;
+  }
+  return (
+    <div style={{ margin: "20px", textAlign: "center" }}>
+      <h2>Welcome, {user.username}!</h2>
+      {user.profilePicUrl && (
+        <img
+          src={user.profilePicUrl}
+          alt="Profile"
+          style={{ width: "150px", height: "150px", borderRadius: "50%" }}
+        />
+      )}
+      {user.bio && <p>{user.bio}</p>}
+    </div>
+  );
+};
 
 UserInfo.propTypes = {
   user: PropTypes.object.isRequired,
@@ -70,11 +93,13 @@ const Dashboard = () => {
   const { user, logout, loading } = useContext(AuthContext);
   const [userPosts, setUserPosts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
+  const [profile, setProfile] = useState({ bio: "", profilePicUrl: "" });
 
   useEffect(() => {
     if (user) {
       fetchUserPosts(user.userId);
       fetchRecentPosts();
+      fetchUserProfile();
     }
   }, [user]);
 
@@ -112,6 +137,26 @@ const Dashboard = () => {
       });
   };
 
+  const fetchUserProfile = () => {
+    const token = localStorage.getItem("token");
+    fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setProfile({
+          bio: data.bio || "",
+          profilePicUrl: data.profilePicUrl || "",
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching user profile:", error);
+        setProfile({ bio: "", profilePicUrl: "" });
+      });
+  };
+
   const handleLogout = () => {
     logout();
   };
@@ -134,7 +179,7 @@ const Dashboard = () => {
           alignItems: "center",
         }}
       >
-        <UserInfo user={user} />
+        <UserInfo user={{ ...user, ...profile }} />
         <button
           onClick={handleCreatePost}
           style={{ margin: "10px", padding: "10px 20px" }}
