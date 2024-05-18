@@ -6,8 +6,7 @@ import (
 
 // A list of allowed origins for simplicity
 var allowedOrigins = []string{
-	"http://localhost:5173", // Add your development and production URLs
-	"https://yourproductiondomain.com",
+	"http://localhost:8080", 
 }
 
 // EnableCORS configures the CORS headers for incoming requests.

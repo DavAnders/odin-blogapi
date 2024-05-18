@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -55,6 +56,24 @@ func main() {
 
 	r := chi.NewRouter()
 
+	// Serve files
+	fs := http.FileServer(http.Dir("public"))
+	r.Handle("/public/*", http.StripPrefix("/public/", fs))
+
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Request URL Path: %s", r.URL.Path)
+		path := filepath.Join("public", r.URL.Path)
+	
+		// Check if the file exists and is not a directory
+		if stat, err := os.Stat(path); os.IsNotExist(err) || stat.IsDir() {
+			log.Println("File does not exist or is a directory, serving index.html")
+			http.ServeFile(w, r, "public/index.html")
+		} else {
+			log.Printf("Serving static file: %s", path)
+			http.ServeFile(w, r, path)
+		}
+	})
+
 	// Apply CORS middleware
 	r.Use(middleware.EnableCORS)
 
@@ -93,10 +112,11 @@ func main() {
 			r.Delete("/comments/{id}", commentController.AdminDeleteComment)
 		})
 	})
-
-	// Serve files
-	fs := http.FileServer(http.Dir("../../public"))
-	r.Handle("/*", fs)
+	
+	r.Get("/dashboard", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/index.html")
+	})
+	
 
 	// Start server
 	log.Println("Starting server on port 8080")
